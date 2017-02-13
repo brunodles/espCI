@@ -5,6 +5,9 @@
 
 #include <ESP8266HTTPClient.h>
 
+#include <ArduinoJson.h>
+#include "FS.h"
+
 #define USE_SERIAL Serial
 
 #define FIREBASE_URL "https://esp-ci.firebaseio.com"
@@ -43,8 +46,9 @@ void setup() {
 void loop() {
     // wait for WiFi connection
     if((WiFiMulti.run() == WL_CONNECTED)) {
-      checkGPIO(0);
-      checkGPIO(2);
+//      checkGPIO(0);
+//      checkGPIO(2);
+      checkGPIO();
       checkConfig();
     }
 
@@ -54,6 +58,15 @@ void loop() {
     // * get get CI-urls
 }
 
+void checkGPIO() {
+  String json = firebaseGet("/gpio.json");
+  
+  StaticJsonBuffer<200> jsonBuffer;
+  JsonObject& root = jsonBuffer.parseObject(json);
+  digitalWrite(0, root["gpio0"];
+  digitalWrite(2, root["gpio2"];
+  
+}
 void checkGPIO(int gpioIndex) {
     USE_SERIAL.printf("Update GPIO%d \n", gpioIndex);
 
