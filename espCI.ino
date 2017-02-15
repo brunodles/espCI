@@ -56,6 +56,7 @@ void loop() {
     // todo update config file
     // * get More Wifi-setting
     // * get get CI-urls
+    checkConfig();
 }
 
 void checkGPIO() {
@@ -63,8 +64,8 @@ void checkGPIO() {
   
   StaticJsonBuffer<200> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(json);
-  digitalWrite(0, root["gpio0"];
-  digitalWrite(2, root["gpio2"];
+  digitalWrite(0, root["gpio0"]);
+  digitalWrite(2, root["gpio2"]);
   
 }
 void checkGPIO(int gpioIndex) {
@@ -83,10 +84,33 @@ void checkGPIO(int gpioIndex) {
 }
 
 void checkConfig() {
-  int value = firebaseGet("/setup/delay.json").toInt();
+  String response = firebaseGet("/setup.json");
+  char json[response.length()];
+  response.toCharArray(json, response.length());
+
+  StaticJsonBuffer<200> jsonBuffer;  
+  JsonObject& setup = jsonBuffer.parseObject(json);
+  
+  int value = setup["delay"];
   if (value > 0) {
-    updateDelay = value;  
+    updateDelay = value;
   }
+}
+
+//https://esp-ci.firebaseio.com/setup/wifi
+bool saveConfig() {
+  StaticJsonBuffer<200> jsonBuffer;
+  JsonObject& json = jsonBuffer.createObject();
+  json["CSVisitante"] = "#wirelAP54111";
+
+  File configFile = SPIFFS.open("/wifi.json", "w");
+  if (!configFile) {
+    Serial.println("Failed to open config file for writing");
+    return false;
+  }
+
+  json.printTo(configFile);
+  return true;
 }
 
 String firebaseGet(String path) {    
