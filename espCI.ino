@@ -79,21 +79,18 @@ void checkConfig() {
   if (value > 0) {
     updateDelay = value;
   }
+  saveFile(response, "setup.json");
 }
 
 //https://esp-ci.firebaseio.com/setup/wifi
-bool saveConfig() {
-  StaticJsonBuffer<200> jsonBuffer;
-  JsonObject& json = jsonBuffer.createObject();
-  json["CSVisitante"] = "#wirelAP54111";
-
-  File configFile = SPIFFS.open("/wifi.json", "w");
-  if (!configFile) {
+bool saveFile(String content, String fileName) {
+  File file = SPIFFS.open(fileName, "w");
+  if (!file) {
     Serial.println("Failed to open config file for writing");
     return false;
   }
 
-  json.printTo(configFile);
+  file.print(content);
   return true;
 }
 
