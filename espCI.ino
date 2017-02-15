@@ -9,6 +9,7 @@
 #include "FS.h"
 
 #define USE_SERIAL Serial
+#define SETUP "/setup.json"
 
 #define FIREBASE_URL "https://esp-ci.firebaseio.com"
 #define FIREBASE_FINGERPRINT "9A:E1:A3:B7:88:E0:C9:A3:3F:13:72:4E:B5:CB:C7:27:41:B2:0F:6A"
@@ -43,6 +44,43 @@ void setup() {
 
 }
 
+bool loadConfig() {
+  File configFile = SPIFFS.open(SETUP, "r");
+  if (!configFile) {
+    Serial.println("Failed to open config file");
+    return false;
+  }
+
+  size_t size = configFile.size();
+  if (size > 1024) {
+    Serial.println("Config file size is too large");
+    return false;
+  }
+
+  // Allocate a buffer to store contents of the file.
+  std::unique_ptr<char[]> buf(new char[size]);
+
+  // We don't use String here because ArduinoJson library requires the input
+  // buffer to be mutable. If you don't use ArduinoJson, you may as well
+  // use configFile.readString instead.
+  configFile.readBytes(buf.get(), size);
+
+  StaticJsonBuffer<200> jsonBuffer;
+  JsonObject& json = jsonBuffer.parseObject(buf.get());
+
+  if (!json.success()) {
+    Serial.println("Failed to parse config file");
+    return false;
+  }
+
+  JsonObject& wifiList = json["wifi"];
+  for (JsonObject::iterator it=wifiList.begin(); it!=wifiList.end(); ++it) {
+    WiFiMulti.addAP(it->key, it->value.asString());
+    Serial.printf("Add wifi %s\n", it->key);
+  }
+  return true;
+}
+
 void loop() {
     // wait for WiFi connection
     if((WiFiMulti.run() == WL_CONNECTED)) {
@@ -68,7 +106,7 @@ void checkGPIO() {
 }
 
 void checkConfig() {
-  String response = firebaseGet("/setup.json");
+  String response = firebaseGet(SETUP);
   char json[response.length()];
   response.toCharArray(json, response.length());
 
@@ -79,7 +117,7 @@ void checkConfig() {
   if (value > 0) {
     updateDelay = value;
   }
-  saveFile(response, "setup.json");
+  saveFile(response, SETUP);
 }
 
 //https://esp-ci.firebaseio.com/setup/wifi
