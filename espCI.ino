@@ -46,8 +46,6 @@ void setup() {
 void loop() {
     // wait for WiFi connection
     if((WiFiMulti.run() == WL_CONNECTED)) {
-//      checkGPIO(0);
-//      checkGPIO(2);
       checkGPIO();
       checkConfig();
     }
@@ -67,20 +65,6 @@ void checkGPIO() {
   digitalWrite(0, root["gpio0"]);
   digitalWrite(2, root["gpio2"]);
   
-}
-void checkGPIO(int gpioIndex) {
-    USE_SERIAL.printf("Update GPIO%d \n", gpioIndex);
-
-    String path = "/gpio/gpio"+String(gpioIndex)+".json";
-    int value = firebaseGet(path).toInt();
-
-    // httpCode will be negative on error
-    if(value >= 0) {
-      USE_SERIAL.printf("GPIO%d = %d\n", gpioIndex, value);
-      digitalWrite(gpioIndex, value);
-    } else {
-        USE_SERIAL.println("Failed to update GPIO");
-    }
 }
 
 void checkConfig() {
