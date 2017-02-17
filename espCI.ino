@@ -66,18 +66,24 @@ bool loadConfig() {
   configFile.readBytes(buf.get(), size);
 
   StaticJsonBuffer<200> jsonBuffer;
-  JsonObject& json = jsonBuffer.parseObject(buf.get());
+  JsonObject& setup = jsonBuffer.parseObject(buf.get());
 
-  if (!json.success()) {
+  if (!setup.success()) {
     Serial.println("Failed to parse config file");
     return false;
   }
 
-  JsonObject& wifiList = json["wifi"];
+  JsonObject& wifiList = setup["wifi"];
   for (JsonObject::iterator it=wifiList.begin(); it!=wifiList.end(); ++it) {
     WiFiMulti.addAP(it->key, it->value.asString());
     Serial.printf("Add wifi %s\n", it->key);
   }
+
+  int value = setup["delay"];
+  if (value > 0) {
+    updateDelay = value;
+  }
+  
   return true;
 }
 
